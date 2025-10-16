@@ -1,0 +1,168 @@
+{% extends 'logs/base.html' %}
+{% load math_filters %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Driver Log Details</h1>
+    <div>
+        <a href="{% url 'log_update' log.pk %}" class="btn btn-secondary">Edit</a>
+        <a href="{% url 'log_list' %}" class="btn btn-outline-primary">Back to List</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Start:</strong> {{ log.start_datetime }}</p>
+                <p><strong>End:</strong> {{ log.end_datetime }}</p>
+                <p><strong>Work Description:</strong></p>
+                <p>{{ log.work_description|linebreaks }}</p>
+                <p><strong>Created at:</strong> {{ log.created_at }}</p>
+                <p><strong>Last edited at:</strong> {{ log.updated_at }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Truck Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Truck:</strong> {{ log.get_truck_display }}</p>
+                <p><strong>Mileage:</strong> {{ log.truck_mileage }}</p>
+                <p><strong>Fuel Level:</strong> {{ log.get_truck_fuel_level_display }}</p>
+                <p><strong>DEF Level:</strong> {{ log.get_def_level_display }}</p>
+                <p><strong>ThermoKing Hours:</strong> {{ log.thermoking_hours }}</p>
+                {% if log.error_lights_faults %}
+                    <p><strong>Error Lights/Faults:</strong></p>
+                    <p>{{ log.error_lights_faults|linebreaks }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Truck Checklist</h5>
+            </div>
+            <div class="card-body">
+                {% with checklist=log.checklist %}
+                <div class="row">
+                    <div class="col-6"><strong>Lights:</strong> {{ checklist.get_lights_display }}</div>
+                    <div class="col-6"><strong>Mirrors:</strong> {{ checklist.get_mirrors_display }}</div>
+                    <div class="col-6"><strong>Tires:</strong> {{ checklist.get_tires_display }}</div>
+                    <div class="col-6"><strong>Brakes:</strong> {{ checklist.get_brakes_display }}</div>
+                    <div class="col-6"><strong>Suspension:</strong> {{ checklist.get_suspension_check_display }}</div>
+                    <div class="col-6"><strong>Pallet Jack:</strong> {{ checklist.get_pallet_jack_display }}</div>
+                    <div class="col-6"><strong>Shrink Wrap:</strong> {{ checklist.get_shrink_wrap_display }}</div>
+                    <div class="col-6"><strong>Pallets:</strong> {{ checklist.get_pallets_display }}</div>
+                    <div class="col-6"><strong>DEF Fluid:</strong> {{ checklist.get_def_fluid_display }}</div>
+                </div>
+                {% if checklist.notes %}
+                    <hr>
+                    <p><strong>Notes:</strong> {{ checklist.notes }}</p>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Inventory</h5>
+            </div>
+            <div class="card-body">
+                {% if log.inventory_items.all %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Airway Bill</th>
+                                    <th>Item Type</th>
+                                    <th>Small Items</th>
+                                    <th>Large Items</th>
+                                    <th>Total Items</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in log.inventory_items.all %}
+                                <tr>
+                                    <td><strong>{{ item.airway_bill }}</strong></td>
+                                    <td>{{ item.get_item_type_display }}</td>
+                                    <td>{{ item.amount_small }}</td>
+                                    <td>{{ item.amount_large }}</td>
+                                    <td><strong>{{ item.total_items }}</strong></td>
+                                    <td>{{ item.description|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-info">
+                                    <td><strong>Totals:</strong></td>
+                                    <td></td>
+                                    <td><strong>{{ total_small }}</strong></td>
+                                    <td><strong>{{ total_large }}</strong></td>
+                                    <td><strong>{{ total_all }}</strong></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No inventory items recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Photos</h5>
+            </div>
+            <div class="card-body">
+                <h6>Truck Photos</h6>
+                <div class="row">
+                    {% for image in log.truck_images.all %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.get_image_type_display }}">
+                            <div class="card-body">
+                                <p class="card-text small">{{ image.get_image_type_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <h6 class="mt-4">ThermoKing Photos</h6>
+                <div class="row">
+                    {% for image in log.thermoking_images.all %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.get_image_type_display }}">
+                            <div class="card-body">
+                                <p class="card-text small">{{ image.get_image_type_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

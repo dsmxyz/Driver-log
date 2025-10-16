@@ -1,0 +1,46 @@
+{% extends 'logs/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>My Driver Logs</h1>
+    <a href="{% url 'log_create' %}" class="btn btn-primary">Create New Log</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Truck</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Mileage</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.start_datetime.date }}</td>
+                            <td>{{ log.get_truck_display }}</td>
+                            <td>{{ log.start_datetime.time }}</td>
+                            <td>{{ log.end_datetime.time }}</td>
+                            <td>{{ log.truck_mileage }}</td>
+                            <td>
+                                <a href="{% url 'log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'log_update' log.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">No driver logs yet. <a href="{% url 'log_create' %}">Create your first log!</a></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

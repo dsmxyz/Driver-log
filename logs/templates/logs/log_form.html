@@ -1,0 +1,205 @@
+{% extends 'logs/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>{% if is_update %}Edit{% else %}Create New{% endif %} Driver Log</h1>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3>Basic Information</h3>
+                <div class="row">
+                    <div class="col-md-6">{{ log_form.start_datetime|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ log_form.end_datetime|as_crispy_field }}</div>
+                </div>
+                {{ log_form.work_description|as_crispy_field }}
+            </div>
+
+            <div class="form-section">
+                <h3>Truck Information</h3>
+                <div class="row">
+                    <div class="col-md-6">{{ log_form.truck|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ log_form.truck_mileage|as_crispy_field }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">{{ log_form.truck_fuel_level|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ log_form.def_level|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ log_form.thermoking_hours|as_crispy_field }}</div>
+                </div>
+                {{ log_form.error_lights_faults|as_crispy_field }}
+            </div>
+
+            <div class="form-section">
+                <h3>Truck Checklist</h3>
+                <div class="row">
+                    <div class="col-md-4">{{ checklist_form.lights|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ checklist_form.mirrors|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ checklist_form.tires|as_crispy_field }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">{{ checklist_form.brakes|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ checklist_form.suspension_check|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ checklist_form.pallet_jack|as_crispy_field }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">{{ checklist_form.shrink_wrap|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ checklist_form.pallets|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ checklist_form.def_fluid|as_crispy_field }}</div>
+                </div>
+                {{ checklist_form.notes|as_crispy_field }}
+            </div>
+
+            {% if not is_update %}
+            <div class="form-section">
+                <h3>Truck Photos (6 required)</h3>
+                {{ truck_formset.management_form }}
+                {% for form in truck_formset %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">{{ form.image_type|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.image|as_crispy_field }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-section">
+                <h3>ThermoKing Photos (3 required)</h3>
+                {{ thermoking_formset.management_form }}
+                {% for form in thermoking_formset %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">{{ form.image_type|as_crispy_field }}</div>
+                        <div class="col-md-6">{{ form.image|as_crispy_field }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="form-section">
+                <h3>Inventory</h3>
+                <p class="text-muted">Add multiple inventory items per airway bill. Enter counts for small and large items.</p>
+                
+                {{ inventory_formset.management_form }}
+                <div id="inventory-forms">
+                    {% for form in inventory_formset %}
+                    <div class="inventory-form row mb-3 border-bottom pb-3">
+                        <div class="col-md-3">{{ form.airway_bill|as_crispy_field }}</div>
+                        <div class="col-md-2">{{ form.item_type|as_crispy_field }}</div>
+                        <div class="col-md-2">{{ form.amount_small|as_crispy_field }}</div>
+                        <div class="col-md-2">{{ form.amount_large|as_crispy_field }}</div>
+                        <div class="col-md-2">{{ form.description|as_crispy_field }}</div>
+                        <div class="col-md-1 pt-4">
+                            {% if form.instance.pk %}
+                                {{ form.DELETE }} <label class="form-check-label small">Delete</label>
+                            {% else %}
+                                <button type="button" class="btn btn-sm btn-danger remove-form" style="display: none;">×</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+    
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="add-inventory">
+        + Add Another Inventory Item
+    </button>
+</div>
+</div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">Save Driver Log</button>
+                <a href="{% if is_update %}{% url 'log_detail' log.pk %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('add-inventory');
+    const totalForms = document.getElementById('id_inventory-TOTAL_FORMS');
+    const formsContainer = document.getElementById('inventory-forms');
+    
+    let formCount = formsContainer.children.length;
+
+    addButton.addEventListener('click', function() {
+        // Clone the first form
+        const newForm = formsContainer.children[0].cloneNode(true);
+        
+        // Update all field names and IDs
+        const formRegex = /inventory-(\d+)-/g;
+        newForm.innerHTML = newForm.innerHTML.replace(
+            formRegex, 
+            `inventory-${formCount}-`
+        );
+        
+        // Clear input values
+        const inputs = newForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(function(input) {
+            if (input.type !== 'hidden' && input.name !== 'csrfmiddlewaretoken') {
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else if (input.type === 'select-one') {
+                    input.selectedIndex = 0;
+                } else {
+                    input.value = '';
+                }
+            }
+        });
+        
+        // Show the remove button for new forms
+        const removeBtn = newForm.querySelector('.remove-form');
+        if (removeBtn) {
+            removeBtn.style.display = 'block';
+            removeBtn.addEventListener('click', function() {
+                newForm.remove();
+                updateTotalForms();
+            });
+        }
+        
+        // Remove any existing delete checkboxes for new forms
+        const deleteCheckbox = newForm.querySelector('input[name*="DELETE"]');
+        if (deleteCheckbox) {
+            deleteCheckbox.parentNode.remove();
+        }
+        
+        // Add the new form to the container
+        formsContainer.appendChild(newForm);
+        
+        // Update the total forms count
+        formCount++;
+        totalForms.value = formCount;
+        
+        // Reinitialize crispy forms for the new form
+        if (typeof window.django !== 'undefined' && window.django.jQuery) {
+            window.django.jQuery(newForm).find('.form-control').each(function() {
+                // Reapply crispy form styles if needed
+            });
+        }
+    });
+    
+    // Add remove functionality to existing remove buttons
+    document.querySelectorAll('.remove-form').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const form = this.closest('.inventory-form');
+            form.remove();
+            updateTotalForms();
+        });
+    });
+    
+    function updateTotalForms() {
+        const forms = formsContainer.querySelectorAll('.inventory-form');
+        totalForms.value = forms.length;
+        
+        // Update all form indices
+        forms.forEach(function(form, index) {
+            const formRegex = /inventory-(\d+)-/g;
+            form.innerHTML = form.innerHTML.replace(
+                formRegex, 
+                `inventory-${index}-`
+            );
+        });
+    }
+});
+</script>
+{% endblock %}

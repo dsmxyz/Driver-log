@@ -1,0 +1,83 @@
+{% extends 'logs/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1>Welcome, {{ user.username }}!</h1>
+        <p class="lead">Driver Log Management System</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'log_create' %}" class="btn btn-primary btn-lg">Create New Log</a>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Total Logs</h5>
+                <p class="card-text display-4">{{ logs.count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Recent Activity</h5>
+                <p class="card-text">Last 5 entries</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Quick Actions</h5>
+                <a href="{% url 'log_create' %}" class="btn btn-light btn-sm">New Log</a>
+                <a href="{% url 'log_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Driver Logs</h5>
+            </div>
+            <div class="card-body">
+                {% if logs %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Truck</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.start_datetime.date }}</td>
+                                    <td>{{ log.get_truck_display }}</td>
+                                    <td>{{ log.start_datetime.time }}</td>
+                                    <td>{{ log.end_datetime.time }}</td>
+                                    <td>
+                                        <a href="{% url 'log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No driver logs yet. <a href="{% url 'log_create' %}">Create your first log!</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
