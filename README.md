@@ -2,6 +2,10 @@
 
 A modern, professional Django web application for managing daily driver logs with comprehensive inventory tracking and vehicle management.
 
+![Django](https://img.shields.io/badge/Django-5.0.6-green.svg)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.0-purple.svg)
+![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## ✨ Features
 
